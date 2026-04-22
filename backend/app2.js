@@ -183,9 +183,8 @@ const server = http.createServer((req, res) => {
   }
   // --- END API ROUTES ---
 
-  // default page - parse URL to remove query strings
-  const parsedUrl = require('url').parse(req.url, true);
-  let filePath = parsedUrl.pathname === '/' ? 'index.html' : parsedUrl.pathname.slice(1);
+  // default page - use pathname which already excludes query strings
+  let filePath = pathname === '/' ? 'index.html' : pathname.slice(1);
 
   // build full path safely
   //value of fullPath is D:\vscode\portalFulStack\index.html
