@@ -186,7 +186,7 @@ const server = http.createServer((req, res) => {
   // default page
   // value of filepath is: /index.html 
   //                       /frontend/style.css
- let filePath = req.url === '/' ? 'index.html' : req.url;
+ let filePath = req.url === '/' ? 'index.html' : req.url.slice(1);
 
   // build full path safely
   //value of fullPath is D:\vscode\portalFulStack\index.html
