@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal.edu.ph</title>
+
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        .container{
+            background-color: rgb(235, 228, 228);
+            width: 100%;
+            height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        form{
+            background-color: white;
+            height: 300px;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-radius: 7px;
+        }
+        form .form-group{
+            position: relative;
+            width: 100%;
+            
+        }
+        input{
+            font-size: 1em;
+            height: 35px;
+            width: 100%;
+            padding: 5px 5px;
+            margin-bottom: 30px;
+            border: 1px solid grey;
+            box-sizing: border-box;
+            
+        }
+        label{
+            position: absolute;
+            left: 5px;
+            top: 10px;
+            background-color: white;
+            color: grey;
+            padding: 0px 5px;
+            transition: 0.2s ease;
+        }
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label
+        {
+            top: -9px;
+            transition: 0.2s ease;
+            color: rgb(71, 88, 236);
+        }
+        .form-group input:focus{
+            border-color: rgb(71, 88, 236);
+            outline: none;
+        }
+            form button{
+            height: 40px;
+            border: none;
+            background-color: rgb(71, 88, 236);
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="signinForm" action="./Main/environment.html" method="get">
+            <div class="form-group">
+              <input type="text" id="username" placeholder=" " placeholder="" minlength="3" maxlength="15" required>
+              <label for="username" id="labelUsername">Username</label>
+            </div>
+
+            <div class="form-group">
+              <input type="email" id="email" placeholder="" minlength="3" maxlength="25" required>
+              <label for="email" id="labelEmail">Email</label>
+            </div>
+
+            <div class="form-group">
+              <input type="password" id="password" placeholder="">
+              <label for="password" id="labelPassword">Password</label>
+            </div>
+            
+            <button type="submit" id="submit2">Sign In</button>
+            <p>Already have an account? <a href="Login.html">Login</a></p>
+        </form>
+    </div>
+    <script src="./Script/signin.js"></script>
+</body>
+</html>

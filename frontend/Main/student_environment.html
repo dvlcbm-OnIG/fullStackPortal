@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Pendejas Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+        }
+
+        .main-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #1976d2;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-title h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .nav-actions button {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-actions button:hover {
+            background-color: white;
+            color: #1976d2;
+        }
+
+        main {
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .grade-system {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .grade-system h2 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .table-output table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table-output th, .table-output td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table-output th {
+            background-color: #f7f9fc;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .table-output tr:hover {
+            background-color: #f1f5fa;
+        }
+
+        /* Responsive Design */
+        .table-output {
+            overflow-x: auto;
+        }
+
+        @media (max-width: 600px) {
+            .main-nav {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .nav-actions {
+                width: 100%;
+            }
+            .nav-actions button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="main-nav">
+        <div class="nav-title">
+            <h2><i class="fa-solid fa-graduation-cap"></i> Student Dashboard <span id="welcomeName" style="font-weight: normal; font-size: 1.1rem; margin-left: 15px;"></span></h2>
+        </div>
+        <div class="nav-actions">
+            <button id="studentSignOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="grade-system">
+            <h2>My Grades</h2>
+            <div class="table-output">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Number</th>
+                            <th>Student Name</th>
+                            <th>Avg. Grade</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentGradesBody">
+                        <!-- Grades will be loaded here dynamically from MongoDB or LocalStorage -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Set Header Name logic
+        const fName = localStorage.getItem('studentFirstName');
+        const lName = localStorage.getItem('studentLastName');
+        if(fName && lName) {
+            document.getElementById('welcomeName').innerHTML = `| Welcome, <b>${fName} ${lName}</b>`;
+        }
+
+        // Simple sign out for student
+        document.getElementById('studentSignOutBtn').addEventListener('click', () => {
+            window.location.href = '../SetupAccount/StudentLogin.html';
+        });
+
+        // Basic read-only fetch logic from backend
+        const tableBody = document.getElementById('studentGradesBody');
+        
+        async function loadStudentGrades() {
+            try {
+                // Get strictly this student's ID
+                const studentId = localStorage.getItem('studentId');
+                
+                // Pass it to the backend so the DB searches matches
+                const res = await fetch(`https://fullstackportal.onrender.com/api/grades?studentId=${encodeURIComponent(studentId)}`);
+                
+                if (res.ok) {
+                    const students = await res.json();
+                    tableBody.innerHTML = ''; 
+                    
+                    if(students.length > 0) {
+                        students.forEach(student => {
+                            const tr = document.createElement('tr');
+
+                            const td1 = document.createElement('td');
+                            td1.textContent = student.idNum || student.id; 
+                            tr.appendChild(td1);
+
+                            const td2 = document.createElement('td');
+                            td2.textContent = student.name;
+                            tr.appendChild(td2);
+
+                            const td3 = document.createElement('td');
+                            td3.textContent = student.avg;
+                            tr.appendChild(td3);
+
+                            const td4 = document.createElement('td');
+                            td4.innerHTML = student.remarks;
+                            tr.appendChild(td4);
+
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="4">No grades available yet. Check back later!</td></tr>';
+                    }
+                } else {
+                     tableBody.innerHTML = '<tr><td colspan="4">No grades available yet. Check back later!</td></tr>';
+                }
+            } catch (err) {
+                console.error("Failed to load grades", err);
+                tableBody.innerHTML = '<tr><td colspan="4">Could not connect to backend server. Is it running?</td></tr>';
+            }
+        }
+        
+        loadStudentGrades();
+    </script>
+</body>
+</html>

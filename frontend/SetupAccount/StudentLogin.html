@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Pendejas Portal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7fbff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signin-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #1976d2;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            border-color: #1976d2;
+            outline: none;
+            box-shadow: 0 0 5px rgba(25, 118, 210, 0.3);
+        }
+
+        .btn {
+            background: #1976d2;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #1565c0;
+        }
+
+        .links-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .link {
+            color: #1976d2;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .signin-container {
+                padding: 20px;
+                width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signin-container">
+        <h2>Student Login</h2>
+        <form id="studentLoginForm">
+            <div class="input-group">
+                <label for="student-id">Student ID</label>
+                <input type="text" id="student-id" name="student-id" placeholder="Enter your Student ID" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        
+        <div class="links-container">
+            <a href="StudentSignIn.html" class="link">Don't have an account? Sign Up</a>
+            <a href="../../index.html" class="link">&larr; Back to Portal</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('studentLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const studentId = document.getElementById('student-id').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Send Login request asking explicitly for a Student account
+                const res = await fetch('https://fullstackportal.onrender.com/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: studentId, password: password, role: 'student' })
+                });
+
+                if(res.ok) {
+                    const user = await res.json();
+                    
+                    // Recover session data directly from DB matching record
+                    localStorage.setItem('studentId', user.studentId);
+                    localStorage.setItem('studentFirstName', user.firstName);
+                    localStorage.setItem('studentLastName', user.lastName);
+                    
+                    // Route perfectly to Student section
+                    window.location.href = '../Main/student_environment.html';
+                } else if(res.status === 401) {
+                    alert("Invalid Student ID or Password. Are you sure you are registered as a Student?");
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Cannot connect to backend server. Make sure node backend is running.");
+            }
+        });
+    </script>
+</body>
+</html>

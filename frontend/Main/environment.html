@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal.edu.ph</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../SetupAccount/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+        }
+        .menu-cont {
+            background-color: #ffffff;
+            height: 100%;
+            width: 300px;
+            position: fixed;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            top: 0;
+            left: 0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .menu-cont.show {
+            transform: translateX(0);
+        }
+        .menu-cont i.fa-x {
+            top: 20px;
+            right: 20px;
+            position: absolute;
+            cursor: pointer;
+            color: #333;
+        }
+        .menu-profile {
+            padding: 40px 20px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .menu-profile p {
+            margin: 10px 0;
+            color: #555;
+            word-break: break-all;
+        }
+       
+        .main-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #2e7d32; /* Teacher Green Theme */
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .main-nav .left {
+            display: flex;
+            align-items: center;
+        }
+        .main-nav i.fa-bars {
+            margin-right: 15px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+        }
+        .main-nav .nav-title h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .main-nav .right a {
+            text-decoration: none;
+            margin-left: 15px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .main-nav .right a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        main {
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .grade-system {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .grade-system h2 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .info-cont {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .info-cont label {
+            color: #555;
+            font-size: 14px;
+        }
+        .info-cont input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .info-cont button {
+            grid-column: span 2;
+            padding: 12px;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .info-cont button:hover {
+            background-color: #1b5e20;
+        }
+
+        .table-output table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table-output th, .table-output td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .table-output th {
+            background-color: #f7f9fc;
+            color: #555;
+            font-weight: bold;
+        }
+        .table-output tr:hover {
+            background-color: #f1f5fa;
+        }
+        
+        #td5 button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #td5 button:hover {
+            background-color: #ff3333;
+        }
+
+        .sign-out-btn {
+            margin: 20px;
+            padding: 10px 15px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: calc(100% - 40px);
+            font-weight: bold;
+        }
+        .sign-out-btn:hover {
+            background-color: #ff3333;
+        }
+
+        /* Responsive Design */
+        .table-output {
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .info-cont {
+                grid-template-columns: 1fr;
+            }
+            .info-cont button {
+                grid-column: span 1;
+            }
+            .main-nav {
+                flex-direction: column;
+                padding: 15px;
+                gap: 15px;
+            }
+            .main-nav .right {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            .main-nav .right a {
+                margin-left: 0;
+            }
+            main {
+                padding: 20px 10px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 2000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.5); 
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+        }
+        /* Show class for modal */
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 30px 20px;
+            border-radius: 8px;
+            width: 320px; 
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            margin-top: 0;
+            color: #333;
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-yes {
+            background-color: #d32f2f;
+            color: white;
+        }
+        
+        .btn-yes:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-no {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-no:hover {
+            background-color: #bdbdbd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <p id="deleteModalText">Are you sure you want to delete this grade?</p>
+            <div class="modal-buttons">
+                <button id="cancelDeleteBtn" class="modal-btn btn-no">No, Cancel</button>
+                <button id="confirmDeleteBtn" class="modal-btn btn-yes">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-cont" id="menuCont">
+        <i class="fa-solid fa-x" id="closeNav"></i>
+        <div class="menu-profile">
+            <h3>Teacher Profile</h3>
+            <p id="envPass"></p>
+        </div>
+        <button id="signOutBtn" class="sign-out-btn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+    </div>
+    <nav class="main-nav">
+        <div class="left nav-title">
+            <i class="fa-solid fa-bars" id="navNavBar"></i>
+            <h2><i class="fa-solid fa-chalkboard-user"></i> Teacher Dashboard <span class="main-nav-name" style="font-weight: normal; font-size: 1.1rem; margin-left: 15px;"></span></h2>
+        </div>
+        <div class="right">
+            <a href="">Home</a>
+            <a href="">Grades</a>
+            <a href="">Informations</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="grade-system">
+            <h2>Welcome to Student Grading System</h2>
+            <form class="info-cont">
+                <label for=""><b>ID Number</b></label>
+                <input type="text" id="idNum" minlength="10" maxlength="10" required>
+                <label for=""><b>Student Name</b></label>
+                <input type="text" id="studentName">
+                <label for=""><b>Pre-Mid</b></label>
+                <input type="text" id="pmidG">
+                <label for=""><b>Mid term</b></label>
+                <input type="number" id="midtG">
+                <label for=""><b>Pre-Final</b></label>
+                <input type="number" id="pFinalG">
+                <label for=""><b>Final </b></label>
+                <input type="number" id="finalG">
+                <button type="button" id="computeG">Compute</button>
+            </form>
+            <div class="table-output">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Number</th>
+                            <th>Student Name</th>
+                            <th>Avg. Grade</th>
+                            <th>Remarks</th>
+                            <!-- <th id="removeData">Remove</th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="../Script/env.js"></script>
+    <script src="../Script/script.js"></script>
+</body>
+</html>
