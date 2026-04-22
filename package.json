@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "node app2.js"
+    "start": "node backend/app2.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
