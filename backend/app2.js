@@ -183,10 +183,9 @@ const server = http.createServer((req, res) => {
   }
   // --- END API ROUTES ---
 
-  // default page
-  // value of filepath is: /index.html 
-  //                       /frontend/style.css
- let filePath = req.url === '/' ? 'index.html' : req.url.slice(1);
+  // default page - parse URL to remove query strings
+  const parsedUrl = require('url').parse(req.url, true);
+  let filePath = parsedUrl.pathname === '/' ? 'index.html' : parsedUrl.pathname.slice(1);
 
   // build full path safely
   //value of fullPath is D:\vscode\portalFulStack\index.html
