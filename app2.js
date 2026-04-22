@@ -183,9 +183,9 @@ const server = http.createServer((req, res) => {
  let filePath = req.url === '/' ? 'index.html' : req.url;
 
   // build full path safely
-  //value of fullPath is D:\vscode\BackEnd\nodejs-practice\Ultimate_Beginner\NoFW-foundations\index.html
-  //                     D:\vscode\BackEnd\nodejs-practice\Ultimate_Beginner\NoFW-foundations\frontend\SetupAccount\style.css
-  const fullPath = path.join(__dirname, '..', filePath);
+  //value of fullPath is D:\vscode\portalFulStack\index.html
+  //                     D:\vscode\portalFulStack\frontend\SetupAccount\style.css
+  const fullPath = path.join(__dirname, filePath);
 
   // get file extension
   // vale if ext is: .html
