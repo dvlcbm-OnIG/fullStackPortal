@@ -191,7 +191,7 @@ const server = http.createServer((req, res) => {
   // build full path safely
   //value of fullPath is D:\vscode\portalFulStack\index.html
   //                     D:\vscode\portalFulStack\frontend\SetupAccount\style.css
-  const fullPath = path.join(__dirname, filePath);
+  const fullPath = path.join(__dirname, '..', filePath);
 
   // get file extension
   // vale if ext is: .html
