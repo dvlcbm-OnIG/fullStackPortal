@@ -19,12 +19,18 @@ async function connectToMongo() {
     const db = client.db("school_data");
     studentGradesCollection = db.collection("studentGrades");
     usersCollection = db.collection("users");
-    console.log("Connected to MongoDB!");
+    console.log("✓ Connected to MongoDB!");
   } catch (err) {
-    console.error("MongoDB connection error:", err);
+    console.error("⚠ MongoDB connection failed:", err.message);
+    console.error("Database operations will be unavailable until connection is restored.");
+    // Don't crash the app - keep the server running
   }
 }
-connectToMongo();
+
+connectToMongo().catch(err => {
+  console.error("Failed to initialize MongoDB connection:", err);
+  // Still start the server
+});
 
 const server = http.createServer((req, res) => {
   // Parse URL and query string parameters
@@ -219,5 +225,8 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+
 
 
