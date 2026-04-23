@@ -11,14 +11,15 @@ const client = new MongoClient(url);
 
 let studentGradesCollection;
 let usersCollection;
+let adminsCollection;
 
 async function connectToMongo() {
   try {
     await client.connect();
-    // I am changing this to a completely new name so it stands out easily!
     const db = client.db("school_data");
     studentGradesCollection = db.collection("studentGrades");
     usersCollection = db.collection("users");
+    adminsCollection = db.collection("admins");
     console.log("✓ Connected to MongoDB!");
   } catch (err) {
     console.error("⚠ MongoDB connection failed:", err.message);
@@ -148,33 +149,75 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  if (pathname === '/api/users' && req.method === 'GET') {
+    if (!usersCollection) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Database not initialized yet' }));
+    }
+
+    const roleFilter = parsedUrl.query.role;
+    const query = roleFilter === 'teacher' || roleFilter === 'student'
+      ? { role: roleFilter }
+      : { role: { $in: ['teacher', 'student'] } };
+
+    return usersCollection.find(query).toArray()
+      .then(users => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(users));
+      })
+      .catch(err => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      });
+  }
+
   if (req.url === '/api/login' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
     return req.on('end', async () => {
       try {
         const { identifier, password, role } = JSON.parse(body);
-        
-        let queryOptions = [];
-        if (identifier) {
+
+        if (role === 'admin') {
+          if (!adminsCollection) {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Database not initialized yet' }));
+          }
+
+          const query = {
+            password: password,
+            $or: [
+              { adminId: identifier },
+              { email: identifier }
+            ]
+          };
+
+          const admin = await adminsCollection.findOne(query);
+          if (admin) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify(admin));
+          }
+        } else {
+          let queryOptions = [];
+          if (identifier) {
             queryOptions.push({ email: identifier });
             queryOptions.push({ studentId: identifier });
+          }
+
+          const user = await usersCollection.findOne({ 
+            $or: queryOptions.length > 0 ? queryOptions : [{}], 
+            password: password,
+            role: role 
+          });
+
+          if (user) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify(user));
+          }
         }
-        
-        // Find a user matching either email or studentId, PLUS the correct password and role
-        const user = await usersCollection.findOne({ 
-           $or: queryOptions.length > 0 ? queryOptions : [{}], 
-           password: password,
-           role: role 
-        });
-        
-        if (user) {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(user));
-        } else {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Invalid credentials' }));
-        }
+
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid credentials' }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));

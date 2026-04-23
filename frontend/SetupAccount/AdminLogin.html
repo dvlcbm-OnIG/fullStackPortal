@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Pendejas Portal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #0d47a1;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            border-color: #0d47a1;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.1);
+        }
+
+        .btn {
+            background: #0d47a1;
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .btn:hover {
+            background: #0b3f91;
+        }
+
+        .link {
+            display: block;
+            margin-top: 20px;
+            color: #0d47a1;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+            <div class="input-group">
+                <label for="admin-id">Admin ID</label>
+                <input type="text" id="admin-id" name="admin-id" placeholder="Enter admin ID" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <a href="../../index.html" class="link">&larr; Back to Portal</a>
+    </div>
+
+    <script src="../Script/adminLogin.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "node backend/app2.js"
+    "start": "node backend/app2.js",
+    "init-admin": "node backend/initAdmin.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
