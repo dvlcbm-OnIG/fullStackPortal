@@ -120,6 +120,19 @@
             color: #475569;
         }
 
+        .loading-state {
+            padding: 24px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .error-state {
+            padding: 24px;
+            color: #dc2626;
+            background-color: #fef2f2;
+            border-left: 4px solid #dc2626;
+        }
+
         @media (max-width: 900px) {
             .summary {
                 flex-direction: column;
@@ -132,7 +145,10 @@
         <div>
             <h2><i class="fa-solid fa-user-shield"></i> Admin Dashboard <span id="adminWelcome" style="font-size: 1rem; font-weight: 400; margin-left: 12px;"></span></h2>
         </div>
-        <button id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+        <div style="display: flex; gap: 10px;">
+            <button id="refreshBtn" style="background-color: #059669; border: 1px solid #059669;"><i class="fa-solid fa-refresh"></i> Refresh</button>
+            <button id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+        </div>
     </nav>
 
     <main>

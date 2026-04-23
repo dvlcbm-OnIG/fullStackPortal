@@ -5,6 +5,7 @@ const teachersTableBody = document.getElementById('teachersTableBody');
 const studentsTableBody = document.getElementById('studentsTableBody');
 
 const signOutBtn = document.getElementById('signOutBtn');
+const refreshBtn = document.getElementById('refreshBtn');
 
 const adminId = localStorage.getItem('adminId');
 const adminEmail = localStorage.getItem('adminEmail');
@@ -21,18 +22,30 @@ signOutBtn.addEventListener('click', () => {
     window.location.href = '../SetupAccount/AdminLogin.html';
 });
 
+refreshBtn.addEventListener('click', () => {
+    loadAccounts();
+});
+
 async function loadAccounts() {
     try {
-        const [teachersRes, studentsRes] = await Promise.all([
-            fetch('/api/users?role=teacher'),
-            fetch('/api/users?role=student')
-        ]);
+        // Show loading state
+        teachersTableBody.innerHTML = '<tr><td colspan="2" class="loading-state">Loading teachers...</td></tr>';
+        studentsTableBody.innerHTML = '<tr><td colspan="4" class="loading-state">Loading students...</td></tr>';
 
-        if (!teachersRes.ok || !studentsRes.ok) {
-            throw new Error('Failed to load account lists');
+        // Add delay between requests to avoid overwhelming MongoDB Atlas free tier
+        const teachersRes = await fetch('/api/users?role=teacher');
+        if (!teachersRes.ok) {
+            throw new Error(`Failed to load teachers: ${teachersRes.status}`);
         }
-
         const teachers = await teachersRes.json();
+
+        // Small delay before next request
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const studentsRes = await fetch('/api/users?role=student');
+        if (!studentsRes.ok) {
+            throw new Error(`Failed to load students: ${studentsRes.status}`);
+        }
         const students = await studentsRes.json();
 
         teacherCount.textContent = teachers.length;
@@ -55,8 +68,15 @@ async function loadAccounts() {
         `).join('') : '<tr><td colspan="4" class="empty-state">No students found.</td></tr>';
     } catch (err) {
         console.error('Failed to load accounts:', err);
-        teachersTableBody.innerHTML = '<tr><td colspan="2" class="empty-state">Unable to load teacher accounts.</td></tr>';
-        studentsTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">Unable to load student accounts.</td></tr>';
+
+        // Check if it's a MongoDB Atlas connection issue
+        if (err.message.includes('Failed to load') || err.message.includes('fetch')) {
+            teachersTableBody.innerHTML = '<tr><td colspan="2" class="error-state">⚠️ Database connection issue. <button onclick="loadAccounts()" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Retry</button></td></tr>';
+            studentsTableBody.innerHTML = '<tr><td colspan="4" class="error-state">⚠️ Database connection issue. <button onclick="loadAccounts()" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Retry</button></td></tr>';
+        } else {
+            teachersTableBody.innerHTML = '<tr><td colspan="2" class="error-state">Unable to load teacher accounts.</td></tr>';
+            studentsTableBody.innerHTML = '<tr><td colspan="4" class="error-state">Unable to load student accounts.</td></tr>';
+        }
     }
 }
 

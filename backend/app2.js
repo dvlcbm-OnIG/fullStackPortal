@@ -169,27 +169,40 @@ const server = http.createServer((req, res) => {
     }
 
     const roleFilter = parsedUrl.query.role;
-    
+
     (async () => {
       try {
         let users = [];
-        
+
         if (roleFilter === 'student') {
           users = await studentsCollection.find({}).toArray();
         } else if (roleFilter === 'teacher') {
           users = await teachersCollection.find({}).toArray();
         } else {
-          // Get both students and teachers
-          const students = await studentsCollection.find({}).toArray();
-          const teachers = await teachersCollection.find({}).toArray();
-          users = [...students, ...teachers];
+          // Get both students and teachers with error handling for each
+          try {
+            const students = await studentsCollection.find({}).toArray();
+            users = users.concat(students);
+          } catch (studentErr) {
+            console.error('Error fetching students:', studentErr.message);
+            // Continue with teachers even if students fail
+          }
+
+          try {
+            const teachers = await teachersCollection.find({}).toArray();
+            users = users.concat(teachers);
+          } catch (teacherErr) {
+            console.error('Error fetching teachers:', teacherErr.message);
+            // Continue even if teachers fail
+          }
         }
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(users));
       } catch (err) {
+        console.error('Error in /api/users:', err.message);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
+        res.end(JSON.stringify({ error: 'Database query failed. Please try again.' }));
       }
     })();
   }
