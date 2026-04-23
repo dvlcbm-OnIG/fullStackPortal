@@ -15,32 +15,19 @@ let teachersCollection;
 let adminsCollection;
 
 async function connectToMongo() {
-  let retries = 0;
-  const maxRetries = 3;
-
-  while (retries < maxRetries) {
-    try {
-      console.log(`Attempting MongoDB connection (attempt ${retries + 1}/${maxRetries})...`);
-      await client.connect();
-      const db = client.db("school_data");
-      studentGradesCollection = db.collection("studentGrades");
-      studentsCollection = db.collection("students");
-      teachersCollection = db.collection("teachers");
-      adminsCollection = db.collection("admins");
-      console.log("✓ Connected to MongoDB!");
-      return; // Success, exit the function
-    } catch (err) {
-      retries++;
-      console.error(`⚠ MongoDB connection failed (attempt ${retries}/${maxRetries}):`, err.message);
-
-      if (retries < maxRetries) {
-        console.log(`Retrying in 2 seconds...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } else {
-        console.error("Database operations will be unavailable until connection is restored.");
-        // Don't crash the app - keep the server running
-      }
-    }
+  try {
+    console.log('Attempting MongoDB connection...');
+    await client.connect();
+    const db = client.db("school_data");
+    studentGradesCollection = db.collection("studentGrades");
+    studentsCollection = db.collection("students");
+    teachersCollection = db.collection("teachers");
+    adminsCollection = db.collection("admins");
+    console.log("✓ Connected to MongoDB!");
+  } catch (err) {
+    console.error("⚠ MongoDB connection failed:", err.message);
+    console.error("Database operations will be unavailable until connection is restored.");
+    // Don't crash the app - keep the server running
   }
 }
 
@@ -55,6 +42,17 @@ const server = http.createServer((req, res) => {
   const pathname = parsedUrl.pathname;
 
   // --- API ROUTES ---
+  if (pathname === '/api/health' && req.method === 'GET') {
+    const dbStatus = studentGradesCollection ? 'connected' : 'disconnected';
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: dbStatus,
+      server: 'running'
+    }));
+  }
+
   if (pathname === '/api/grades' && req.method === 'GET') {
     if (!studentGradesCollection) {
       res.writeHead(503, { 'Content-Type': 'application/json' });

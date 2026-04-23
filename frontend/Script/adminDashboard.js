@@ -25,6 +25,27 @@ refreshBtn.addEventListener('click', () => {
     loadAccounts();
 });
 
+// Check server connectivity first
+async function checkServerHealth() {
+    try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+            const health = await response.json();
+            console.log('Server health:', health);
+            connectionStatus.innerHTML = `<i class="fa-solid fa-circle" style="color: #059669;"></i> Server connected (${health.database})`;
+            return true;
+        } else {
+            throw new Error(`Health check failed: ${response.status}`);
+        }
+    } catch (err) {
+        console.error('Server health check failed:', err);
+        connectionStatus.innerHTML = '<i class="fa-solid fa-circle" style="color: #dc2626;"></i> Server unreachable';
+        teachersTableBody.innerHTML = '<tr><td colspan="2" class="error-state">❌ Cannot connect to server. Please check if the backend is running.</td></tr>';
+        studentsTableBody.innerHTML = '<tr><td colspan="4" class="error-state">❌ Cannot connect to server. Please check if the backend is running.</td></tr>';
+        return false;
+    }
+}
+
 async function loadAccounts() {
     try {
         // Update connection status
@@ -97,4 +118,13 @@ async function loadAccounts() {
     }
 }
 
-loadAccounts();
+// Initialize dashboard
+async function initializeDashboard() {
+    const serverHealthy = await checkServerHealth();
+    if (serverHealthy) {
+        loadAccounts();
+    }
+}
+
+// Start initialization
+initializeDashboard();
