@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Sign In - Pendejas Portal</title>
+    <title>Teacher Login - Pendejas Portal</title>
     <style>
         body {
             margin: 0;
@@ -76,19 +76,23 @@
             background: #1b5e20;
         }
 
-        .back-link {
-            display: inline-block;
+        .links-container {
             margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .link {
             color: #2e7d32;
             text-decoration: none;
             font-size: 14px;
         }
 
-        .back-link:hover {
+        .link:hover {
             text-decoration: underline;
         }
 
-        /* Responsive Design */
         @media (max-width: 480px) {
             .signin-container {
                 padding: 20px;
@@ -99,34 +103,31 @@
 </head>
 <body>
     <div class="signin-container">
-        <h2>Teacher Sign In</h2>
-        <form id="teacherForm">
+        <h2>Teacher Login</h2>
+        <form id="teacherLoginForm">
             <div class="input-group">
-                <label for="teacher-name">Full Name</label>
-                <input type="text" id="teacher-name" name="teacher-name" placeholder="Jane Doe" required>
-            </div>
-            <div class="input-group">
-                <label for="teacher-email">Staff Email / Username</label>
+                <label for="teacher-email">Email / Username</label>
                 <input type="text" id="teacher-email" name="teacher-email" placeholder="name@school.edu" required>
             </div>
             <div class="input-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" placeholder="Enter your password" required>
             </div>
-            <button type="submit" class="btn">Sign In As Teacher</button>
+            <button type="submit" class="btn">Login as Teacher</button>
         </form>
-        <a href="TeacherLogin.html" class="back-link">Already have an account? Login</a><br>
-        <a href="../../index.html" class="back-link">&larr; Back to Portal</a>
+
+        <div class="links-container">
+            <a href="TeacherSignIn.html" class="link">Don't have an account? Sign In</a>
+            <a href="../../index.html" class="link">&larr; Back to Portal</a>
+        </div>
     </div>
 
     <script>
-        document.getElementById('teacherForm').addEventListener('submit', async (e) => {
+        document.getElementById('teacherLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('teacher-name').value;
             const email = document.getElementById('teacher-email').value;
             const password = document.getElementById('password').value;
 
-            // Try to Login First as a strict 'Teacher' role
             try {
                 const res = await fetch('https://fullstackportal.onrender.com/api/login', {
                     method: 'POST',
@@ -134,39 +135,20 @@
                     body: JSON.stringify({ identifier: email, password: password, role: 'teacher' })
                 });
 
-                if(res.ok) {
+                if (res.ok) {
                     const user = await res.json();
-                    
-                    localStorage.setItem('username', user.email);
-                    localStorage.setItem('email', user.email);
-                    localStorage.setItem('password', user.password);
-                    
+                    localStorage.setItem('username', user.email || email);
+                    localStorage.setItem('email', user.email || email);
+                    localStorage.setItem('password', user.password || password);
                     window.location.href = '../Main/environment.html';
-                } else if(res.status === 401) {
-                    
-                    // If login failed, automatically create their Teacher Account (No dedicated register page yet)
-                    const regRes = await fetch('https://fullstackportal.onrender.com/api/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ role: 'teacher', name: name, email: email, password: password }) // Notice role
-                    });
-                    
-                    if(regRes.ok) {
-                        alert("Teacher Account Created Successfully! Welcome to the portal.");
-                        
-                        localStorage.setItem('username', email);
-                        localStorage.setItem('email', email);
-                        localStorage.setItem('password', password);
-                        window.location.href = '../Main/environment.html';
-                    } else if (regRes.status === 400) {
-                        alert("Hold up! An account with that Email is already registered as a Student. Teachers and Students must use separate accounts.");
-                    } else {
-                        alert("Invalid credentials or server error.");
-                    }
+                } else if (res.status === 401) {
+                    alert('Invalid teacher credentials. Please check your email and password.');
+                } else {
+                    alert('Login failed. Please try again.');
                 }
             } catch (err) {
                 console.error(err);
-                alert("Cannot connect to backend server. Make sure node backend is running.");
+                alert('Cannot connect to backend server. Make sure node backend is running.');
             }
         });
     </script>

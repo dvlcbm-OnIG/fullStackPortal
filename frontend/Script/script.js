@@ -20,7 +20,6 @@ document.addEventListener('click', function(e){
 const computeG = document.getElementById('computeG')
 const table = document.querySelector('table tbody')
 const idNumInput = document.getElementById('idNum')
-const studentNameInput = document.getElementById('studentName')
 const pmidGInput = document.getElementById('pmidG')
 const midtGInput = document.getElementById('midtG')
 const pFinalGInput = document.getElementById('pFinalG')
@@ -161,7 +160,7 @@ async function tableGrade(){
     let remarks = '';
 
     let idNum = idNumInput.value;
-    let studentName = studentNameInput.value;
+    let studentName = '';
     const pmid = parseFloat(pmidGInput.value);
     const midt = parseFloat(midtGInput.value);
     const pFinal = parseFloat(pFinalGInput.value);
@@ -216,7 +215,6 @@ async function tableGrade(){
 
                 // Only clear input fields if successfully found and saved
                 idNumInput.value = '';
-                studentNameInput.value = '';
                 pmidGInput.value = '';
                 midtGInput.value = '';
                 pFinalGInput.value = '';
