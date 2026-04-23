@@ -10,7 +10,8 @@ console.log('Using MongoDB URI:', url);
 const client = new MongoClient(url);
 
 let studentGradesCollection;
-let usersCollection;
+let studentsCollection;
+let teachersCollection;
 let adminsCollection;
 
 async function connectToMongo() {
@@ -18,7 +19,8 @@ async function connectToMongo() {
     await client.connect();
     const db = client.db("school_data");
     studentGradesCollection = db.collection("studentGrades");
-    usersCollection = db.collection("users");
+    studentsCollection = db.collection("students");
+    teachersCollection = db.collection("teachers");
     adminsCollection = db.collection("admins");
     console.log("✓ Connected to MongoDB!");
   } catch (err) {
@@ -82,7 +84,7 @@ const server = http.createServer((req, res) => {
         const gradeData = JSON.parse(body);
         
         // Before saving the grade, let's verify this Student ID actually exists!
-        const existingStudent = await usersCollection.findOne({ studentId: gradeData.idNum, role: 'student' });
+        const existingStudent = await studentsCollection.findOne({ studentId: gradeData.idNum });
         
         if (!existingStudent) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -125,6 +127,17 @@ const server = http.createServer((req, res) => {
       try {
         const userData = JSON.parse(body);
         
+        // Choose collection based on role
+        let targetCollection;
+        if (userData.role === 'student') {
+          targetCollection = studentsCollection;
+        } else if (userData.role === 'teacher') {
+          targetCollection = teachersCollection;
+        } else {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'Invalid role specified' }));
+        }
+        
         // Safely build the query to check if the user exists
         let queryOptions = [];
         if (userData.email) queryOptions.push({ email: userData.email });
@@ -132,14 +145,14 @@ const server = http.createServer((req, res) => {
         
         let existingUser = null;
         if (queryOptions.length > 0) {
-            existingUser = await usersCollection.findOne({ $or: queryOptions });
+            existingUser = await targetCollection.findOne({ $or: queryOptions });
         }
         
         if (existingUser) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ error: 'User already exists' }));
         }
-        await usersCollection.insertOne(userData);
+        await targetCollection.insertOne(userData);
         res.writeHead(201, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'User registered successfully' }));
       } catch (err) {
@@ -150,25 +163,35 @@ const server = http.createServer((req, res) => {
   }
 
   if (pathname === '/api/users' && req.method === 'GET') {
-    if (!usersCollection) {
+    if (!studentsCollection || !teachersCollection) {
       res.writeHead(503, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'Database not initialized yet' }));
     }
 
     const roleFilter = parsedUrl.query.role;
-    const query = roleFilter === 'teacher' || roleFilter === 'student'
-      ? { role: roleFilter }
-      : { role: { $in: ['teacher', 'student'] } };
-
-    return usersCollection.find(query).toArray()
-      .then(users => {
+    
+    (async () => {
+      try {
+        let users = [];
+        
+        if (roleFilter === 'student') {
+          users = await studentsCollection.find({}).toArray();
+        } else if (roleFilter === 'teacher') {
+          users = await teachersCollection.find({}).toArray();
+        } else {
+          // Get both students and teachers
+          const students = await studentsCollection.find({}).toArray();
+          const teachers = await teachersCollection.find({}).toArray();
+          users = [...students, ...teachers];
+        }
+        
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(users));
-      })
-      .catch(err => {
+      } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
-      });
+      }
+    })();
   }
 
   if (req.url === '/api/login' && req.method === 'POST') {
@@ -198,16 +221,27 @@ const server = http.createServer((req, res) => {
             return res.end(JSON.stringify(admin));
           }
         } else {
+          let targetCollection;
+          if (role === 'student') {
+            targetCollection = studentsCollection;
+          } else if (role === 'teacher') {
+            targetCollection = teachersCollection;
+          } else {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Invalid role' }));
+          }
+
           let queryOptions = [];
           if (identifier) {
             queryOptions.push({ email: identifier });
-            queryOptions.push({ studentId: identifier });
+            if (role === 'student') {
+              queryOptions.push({ studentId: identifier });
+            }
           }
 
-          const user = await usersCollection.findOne({ 
+          const user = await targetCollection.findOne({ 
             $or: queryOptions.length > 0 ? queryOptions : [{}], 
-            password: password,
-            role: role 
+            password: password
           });
 
           if (user) {
