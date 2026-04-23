@@ -1,7 +1,10 @@
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
 
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/';
+console.log('Using MongoDB URI for admin init:', uri);
 const client = new MongoClient(uri);
 
 const adminData = {

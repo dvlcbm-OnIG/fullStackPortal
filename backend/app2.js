@@ -1,12 +1,12 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { MongoClient} = require('mongodb');
 
-// Fallback to the explicit replica set URL because Node's DNS resolving is failing on your network
-// const url = "mongodb+srv://russeljeoff143:russeljeoff143@cluster0.4sgdrfh.mongodb.net/?retryWrites=true&w=majority";
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const url = process.env.MONGO_URI || "mongodb://localhost:27017/";
+console.log('Using MongoDB URI:', url);
 const client = new MongoClient(url);
 
 let studentGradesCollection;
