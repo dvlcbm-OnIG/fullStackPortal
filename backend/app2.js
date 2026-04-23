@@ -7,12 +7,36 @@ const { MongoClient} = require('mongodb');
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const url = process.env.MONGO_URI || "mongodb://localhost:27017/";
 console.log('Using MongoDB URI:', url);
-const client = new MongoClient(url);
+
+// MongoDB client with more robust connection options
+const client = new MongoClient(url, {
+  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+});
 
 let studentGradesCollection;
 let studentsCollection;
 let teachersCollection;
 let adminsCollection;
+
+// Helper function to safely check database availability
+function isDatabaseAvailable() {
+  return studentGradesCollection && studentsCollection && teachersCollection && adminsCollection;
+}
+
+// Helper function for safe database operations
+async function safeDbOperation(operation, fallbackResponse = null) {
+  try {
+    if (!isDatabaseAvailable()) {
+      throw new Error('Database not available');
+    }
+    return await operation();
+  } catch (err) {
+    console.error('Database operation failed:', err.message);
+    return fallbackResponse;
+  }
+}
 
 async function connectToMongo() {
   try {
@@ -36,6 +60,17 @@ connectToMongo().catch(err => {
   // Still start the server
 });
 
+// Global error handler to prevent server crashes
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Don't exit the process, just log the error
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, just log the error
+});
+
 const server = http.createServer((req, res) => {
   // Parse URL and query string parameters
   const parsedUrl = require('url').parse(req.url, true);
@@ -43,7 +78,7 @@ const server = http.createServer((req, res) => {
 
   // --- API ROUTES ---
   if (pathname === '/api/health' && req.method === 'GET') {
-    const dbStatus = studentGradesCollection ? 'connected' : 'disconnected';
+    const dbStatus = isDatabaseAvailable() ? 'connected' : 'disconnected';
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({
       status: 'ok',
@@ -175,9 +210,9 @@ const server = http.createServer((req, res) => {
   }
 
   if (pathname === '/api/users' && req.method === 'GET') {
-    if (!studentsCollection || !teachersCollection) {
+    if (!isDatabaseAvailable()) {
       res.writeHead(503, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ error: 'Database not initialized yet' }));
+      return res.end(JSON.stringify({ error: 'Database not available' }));
     }
 
     const roleFilter = parsedUrl.query.role;
@@ -187,26 +222,16 @@ const server = http.createServer((req, res) => {
         let users = [];
 
         if (roleFilter === 'student') {
-          users = await studentsCollection.find({}).toArray();
+          const students = await safeDbOperation(() => studentsCollection.find({}).toArray(), []);
+          users = students;
         } else if (roleFilter === 'teacher') {
-          users = await teachersCollection.find({}).toArray();
+          const teachers = await safeDbOperation(() => teachersCollection.find({}).toArray(), []);
+          users = teachers;
         } else {
           // Get both students and teachers with error handling for each
-          try {
-            const students = await studentsCollection.find({}).toArray();
-            users = users.concat(students);
-          } catch (studentErr) {
-            console.error('Error fetching students:', studentErr.message);
-            // Continue with teachers even if students fail
-          }
-
-          try {
-            const teachers = await teachersCollection.find({}).toArray();
-            users = users.concat(teachers);
-          } catch (teacherErr) {
-            console.error('Error fetching teachers:', teacherErr.message);
-            // Continue even if teachers fail
-          }
+          const students = await safeDbOperation(() => studentsCollection.find({}).toArray(), []);
+          const teachers = await safeDbOperation(() => teachersCollection.find({}).toArray(), []);
+          users = users.concat(students, teachers);
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -227,9 +252,9 @@ const server = http.createServer((req, res) => {
         const { identifier, password, role } = JSON.parse(body);
 
         if (role === 'admin') {
-          if (!adminsCollection) {
+          if (!isDatabaseAvailable()) {
             res.writeHead(503, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ error: 'Database not initialized yet' }));
+            return res.end(JSON.stringify({ error: 'Database not available' }));
           }
 
           const query = {
@@ -240,12 +265,17 @@ const server = http.createServer((req, res) => {
             ]
           };
 
-          const admin = await adminsCollection.findOne(query);
+          const admin = await safeDbOperation(() => adminsCollection.findOne(query));
           if (admin) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify(admin));
           }
         } else {
+          if (!isDatabaseAvailable()) {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Database not available' }));
+          }
+
           let targetCollection;
           if (role === 'student') {
             targetCollection = studentsCollection;
@@ -264,10 +294,10 @@ const server = http.createServer((req, res) => {
             }
           }
 
-          const user = await targetCollection.findOne({ 
-            $or: queryOptions.length > 0 ? queryOptions : [{}], 
+          const user = await safeDbOperation(() => targetCollection.findOne({
+            $or: queryOptions.length > 0 ? queryOptions : [{}],
             password: password
-          });
+          }));
 
           if (user) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
